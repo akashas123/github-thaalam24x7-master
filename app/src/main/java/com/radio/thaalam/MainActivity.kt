@@ -330,7 +330,6 @@ class MainActivity : ComponentActivity() {
             sleepJob?.cancel()
 
             sleepSeconds = minutes * 60L
-
             sleepJob = CoroutineScope(Dispatchers.Main).launch {
                 while (sleepSeconds > 0) {
                     delay(1000)
@@ -339,6 +338,11 @@ class MainActivity : ComponentActivity() {
 
                 //  ONLY HERE stop playback
                 handlePlayback(context,true)
+                Toast.makeText(
+                    context,
+                    "Time's up. Playback stopped",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -645,10 +649,15 @@ Column(
 
                     if (minutes == 0) {
                         sleepSeconds = 0
+                        Toast.makeText(context, "Sleep timer turned off", Toast.LENGTH_SHORT).show()
                     } else {
                         startSleepTimer(minutes)
+                        Toast.makeText(
+                            context,
+                            "Sleep timer set for $minutes minutes",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-
                     showSleepSheet = false
                 }
                 .padding(vertical = 14.dp),
@@ -791,6 +800,11 @@ Column(
 
                 //  ONLY HERE stop playback
                 handlePlayback(context,true)
+                Toast.makeText(
+                    context,
+                    "Time's up. Playback stopped",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -1096,8 +1110,14 @@ Column(
 
                                     if (minutes == 0) {
                                         sleepSeconds = 0
+                                        Toast.makeText(context, "Sleep timer turned off", Toast.LENGTH_SHORT).show()
                                     } else {
                                         startSleepTimer(minutes)
+                                        Toast.makeText(
+                                            context,
+                                            "Sleep timer set for $minutes minutes",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
 
                                     showSleepSheet = false
