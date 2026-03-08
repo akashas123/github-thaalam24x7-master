@@ -1,0 +1,12 @@
+# Global owner
+* @akashas123
+
+# Android app code
+/app/ @akashas123
+
+# UI files
+/app/src/main/res/ @akashas123
+
+# Gradle build files
+*.gradle @akashas123
+*.kts @akashas123
