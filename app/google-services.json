@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "393779794646",
+    "project_id": "thaalam-24x7",
+    "storage_bucket": "thaalam-24x7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:393779794646:android:e2c426e8e723cd9fe92f77",
+        "android_client_info": {
+          "package_name": "com.radio.thaalam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCR-FnJK41KFb7_daPVngPDy8IuwBZ98o0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
