@@ -64,6 +64,8 @@ import android.media.audiofx.AudioEffect
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import com.radio.thaalam.RadioPlayerHolder.player
@@ -352,6 +354,7 @@ class MainActivity : ComponentActivity() {
 
                 .fillMaxSize()
                 .background(Brush.verticalGradient(listOf(bgColor, Color.Black)))
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
                 modifier = Modifier
@@ -593,89 +596,89 @@ Row(
 }
 
 }
-
-
-}
-
 //Ui SLeep
 
-if (showSleepSheet) {
-ModalBottomSheet(
-onDismissRequest = { showSleepSheet = false },
-containerColor = Color(0xFF121212)
-) {
-Column(
-    modifier = Modifier
-        .fillMaxWidth()
-        .padding(24.dp),
-    horizontalAlignment = Alignment.CenterHorizontally
-) {
+            if (showSleepSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showSleepSheet = false },
+                    containerColor = Color(0xFF121212)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
-    Text(
-        text = "Sleep Timer",
-        color = Color.White,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.Bold
-    )
+                        Text(
+                            text = "Sleep Timer",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
-    Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(20.dp))
 
-    if (sleepSeconds > 0) {
-        Text(
-            text = "Ends in ${sleepSeconds / 60}:${(sleepSeconds % 60).toString().padStart(2, '0')}",
-            color = Color.White,
-            fontSize = 16.sp
-        )
-        Spacer(Modifier.height(16.dp))
-    }
+                        if (sleepSeconds > 0) {
+                            Text(
+                                text = "Ends in ${sleepSeconds / 60}:${(sleepSeconds % 60).toString().padStart(2, '0')}",
+                                color = Color.White,
+                                fontSize = 16.sp
+                            )
+                            Spacer(Modifier.height(16.dp))
+                        }
 
-    val sleepOptions = listOf(
-        "Timer Off" to 0,
-        "5 minutes" to 5,
-        "15 minutes" to 15,
-        "30 minutes" to 30,
-        "45 minutes" to 45,
-        "60 minutes" to 60
-    )
+                        val sleepOptions = listOf(
+                            "Timer Off" to 0,
+                            "5 minutes" to 5,
+                            "15 minutes" to 15,
+                            "30 minutes" to 30,
+                            "45 minutes" to 45,
+                            "60 minutes" to 60
+                        )
 
-    sleepOptions.forEachIndexed { index, (label, minutes) ->
+                        sleepOptions.forEachIndexed { index, (label, minutes) ->
 
-        Text(
-            text = label,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    sleepJob?.cancel()
+                            Text(
+                                text = label,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        sleepJob?.cancel()
 
-                    if (minutes == 0) {
-                        sleepSeconds = 0
-                        Toast.makeText(context, "Sleep timer turned off", Toast.LENGTH_SHORT).show()
-                    } else {
-                        startSleepTimer(minutes)
-                        Toast.makeText(
-                            context,
-                            "Sleep timer set for $minutes minutes",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                                        if (minutes == 0) {
+                                            sleepSeconds = 0
+                                            Toast.makeText(context, "Sleep timer turned off", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            startSleepTimer(minutes)
+                                            Toast.makeText(
+                                                context,
+                                                "Sleep timer set for $minutes minutes",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                        showSleepSheet = false
+                                    }
+                                    .padding(vertical = 14.dp),
+                                color = Color.White,
+                                fontSize = 18.sp
+                            )
+
+                            // Divider between options (not after last)
+                            if (index != sleepOptions.lastIndex) {
+                                Divider(
+                                    color = Color.White.copy(alpha = 0.25f),
+                                    thickness = 1.dp
+                                )
+                            }
+                        }
                     }
-                    showSleepSheet = false
                 }
-                .padding(vertical = 14.dp),
-            color = Color.White,
-            fontSize = 18.sp
-        )
+            }
 
-        // Divider between options (not after last)
-        if (index != sleepOptions.lastIndex) {
-            Divider(
-                color = Color.White.copy(alpha = 0.25f),
-                thickness = 1.dp
-            )
-        }
-    }
+
 }
-}
-}
+
 
 
 }
@@ -814,6 +817,7 @@ Column(
 
                 .fillMaxSize()
                 .background(Brush.verticalGradient(listOf(bgColor, Color.Black)))
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
                 modifier = Modifier
@@ -1054,100 +1058,90 @@ Column(
 
 
             }
+            //Ui SLeep
 
-
-        }
-
-//Ui SLeep
-
-        if (showSleepSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showSleepSheet = false },
-                containerColor = Color(0xFF121212)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            if (showSleepSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showSleepSheet = false },
+                    containerColor = Color(0xFF121212)
                 ) {
-
-                    Text(
-                        text = "Sleep Timer",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    if (sleepSeconds > 0) {
-                        Text(
-                            text = "Ends in ${sleepSeconds / 60}:${(sleepSeconds % 60).toString().padStart(2, '0')}",
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                        Spacer(Modifier.height(16.dp))
-                    }
-
-                    val sleepOptions = listOf(
-                        "Timer Off" to 0,
-                        "5 minutes" to 5,
-                        "15 minutes" to 15,
-                        "30 minutes" to 30,
-                        "45 minutes" to 45,
-                        "60 minutes" to 60
-                    )
-
-                    sleepOptions.forEachIndexed { index, (label, minutes) ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
                         Text(
-                            text = label,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    sleepJob?.cancel()
-
-                                    if (minutes == 0) {
-                                        sleepSeconds = 0
-                                        Toast.makeText(context, "Sleep timer turned off", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        startSleepTimer(minutes)
-                                        Toast.makeText(
-                                            context,
-                                            "Sleep timer set for $minutes minutes",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
-                                    showSleepSheet = false
-                                }
-                                .padding(vertical = 14.dp),
+                            text = "Sleep Timer",
                             color = Color.White,
-                            fontSize = 18.sp
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
                         )
 
-                        // Divider between options (not after last)
-                        if (index != sleepOptions.lastIndex) {
-                            Divider(
-                                color = Color.White.copy(alpha = 0.25f),
-                                thickness = 1.dp
+                        Spacer(Modifier.height(20.dp))
+
+                        if (sleepSeconds > 0) {
+                            Text(
+                                text = "Ends in ${sleepSeconds / 60}:${(sleepSeconds % 60).toString().padStart(2, '0')}",
+                                color = Color.White,
+                                fontSize = 16.sp
                             )
+                            Spacer(Modifier.height(16.dp))
+                        }
+
+                        val sleepOptions = listOf(
+                            "Timer Off" to 0,
+                            "5 minutes" to 5,
+                            "15 minutes" to 15,
+                            "30 minutes" to 30,
+                            "45 minutes" to 45,
+                            "60 minutes" to 60
+                        )
+
+                        sleepOptions.forEachIndexed { index, (label, minutes) ->
+
+                            Text(
+                                text = label,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        sleepJob?.cancel()
+
+                                        if (minutes == 0) {
+                                            sleepSeconds = 0
+                                            Toast.makeText(context, "Sleep timer turned off", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            startSleepTimer(minutes)
+                                            Toast.makeText(
+                                                context,
+                                                "Sleep timer set for $minutes minutes",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        showSleepSheet = false
+                                    }
+                                    .padding(vertical = 14.dp),
+                                color = Color.White,
+                                fontSize = 18.sp
+                            )
+
+                            // Divider between options (not after last)
+                            if (index != sleepOptions.lastIndex) {
+                                Divider(
+                                    color = Color.White.copy(alpha = 0.25f),
+                                    thickness = 1.dp
+                                )
+                            }
                         }
                     }
                 }
             }
+
+
         }
-
-
-
-
     }
-
-
-
-
-
 }
 
 
