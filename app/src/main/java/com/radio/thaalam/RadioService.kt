@@ -30,6 +30,7 @@ import androidx.annotation.RequiresApi
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 
 
 class RadioService : Service() {
@@ -110,8 +111,10 @@ class RadioService : Service() {
             .build()
 
         if (player != null) return
-
+        val loadcontrol = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(30000,120000,3000,5000).build()
         player = ExoPlayer.Builder(this)
+            .setLoadControl(loadcontrol)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
