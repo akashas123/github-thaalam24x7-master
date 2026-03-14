@@ -39,6 +39,7 @@ class RadioService : Service() {
     private lateinit var audioFocusRequest: AudioFocusRequest
     private lateinit var audioDeviceCallback: AudioDeviceCallback
     private var metadataJob: Job? = null
+
     object StreamConfig {
         const val STREAM_URL = "https://radio.thaalam24x7.in/listen/thaalam_24x7/live"
     }
@@ -51,6 +52,7 @@ class RadioService : Service() {
                 AudioManager.AUDIOFOCUS_LOSS -> {
                     player?.pause()
                     isPlaying.value = false
+                    refreshTrigger.value = false
                     updatePlaybackState(false)
                 }
 
@@ -59,31 +61,16 @@ class RadioService : Service() {
                 }
 
                 AudioManager.AUDIOFOCUS_GAIN -> {
+
+                    player?.seekToDefaultPosition()
                     player?.play()
+
+                    isPlaying.value = true
+                    refreshTrigger.value = true
+                    updatePlaybackState(true)
                 }
             }
         }
-
-
-
-
-    private fun restartPlayer() {
-        // Fully release old player
-        player?.stop()
-        player?.release()
-        player = null
-
-        // Create new instance
-        player = ExoPlayer.Builder(this).build()
-
-        val mediaItem = MediaItem.fromUri(StreamConfig.STREAM_URL)
-        player!!.setMediaItem(mediaItem)
-        player!!.prepare()
-        player!!.playWhenReady = true
-    }
-
-
-
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -112,33 +99,7 @@ class RadioService : Service() {
 
         audioManager.registerAudioDeviceCallback(audioDeviceCallback, null)
 
-        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-
-        val focusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
-            when (focusChange) {
-
-                AudioManager.AUDIOFOCUS_LOSS -> {
-                    player?.pause()
-                    isPlaying.value=false
-                    refreshTrigger.value=false
-                    updatePlaybackState(false)
-                }
-
-                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                    player?.pause()
-                }
-
-                AudioManager.AUDIOFOCUS_GAIN -> {
-                    player?.play()
-                    player?.seekToDefaultPosition()
-                    isPlaying.value=true
-                    refreshTrigger.value=true
-                    updatePlaybackState(true)
-                }
-            }
-        }
-
-        val audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setOnAudioFocusChangeListener(focusChangeListener)
             .setAudioAttributes(
                 android.media.AudioAttributes.Builder()
@@ -148,9 +109,6 @@ class RadioService : Service() {
             )
             .build()
 
-        audioManager.requestAudioFocus(audioFocusRequest)
-
-
         if (player != null) return
 
         player = ExoPlayer.Builder(this)
@@ -159,7 +117,7 @@ class RadioService : Service() {
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .build(),
-                true
+                false
             )
             .build().apply {
 
@@ -167,7 +125,7 @@ class RadioService : Service() {
                     override fun onAudioSessionIdChanged(sessionId: Int) {
                         if (sessionId != C.AUDIO_SESSION_ID_UNSET) {
 
-                            audioSessionId=sessionId
+                            audioSessionId = sessionId
 
                             Log.e("RadioService", "Audio session created: $sessionId")
 
@@ -182,30 +140,36 @@ class RadioService : Service() {
 
         mediaSession = MediaSessionCompat(this, "RadioSession")
         mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-            override fun onPlay() {
-                player?.play()
-                player?.seekToDefaultPosition()
-                isPlaying.value=true
-                refreshTrigger.value=true
-                updatePlaybackState(true)
 
+            override fun onPlay() {
+
+                val result = audioManager.requestAudioFocus(audioFocusRequest)
+
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+
+                    player?.seekToDefaultPosition()
+                    player?.play()
+
+                    isPlaying.value = true
+                    refreshTrigger.value = true
+                    updatePlaybackState(true)
+                }
             }
 
             override fun onPause() {
-                player?.pause()
-                isPlaying.value=false
-                refreshTrigger.value=false
-                updatePlaybackState(false)
 
+                player?.pause()
+                audioManager.abandonAudioFocusRequest(audioFocusRequest)
+
+                isPlaying.value = false
+                refreshTrigger.value = false
+                updatePlaybackState(false)
             }
         })
 
         mediaSession.isActive = true
 
-
         createNotificationChannel()
-        //startMetadataUpdates()
-
     }
 
     private fun updatePlaybackState(isPlaying: Boolean) {
@@ -226,36 +190,40 @@ class RadioService : Service() {
     }
 
 
-
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-
 
         when (intent?.action) {
 
             "OPEN_APP" -> {
-                // No action needed, app will open via PendingIntent
             }
 
             "ACTION_PLAY" -> {
-                player?.play()
-                player?.seekToDefaultPosition()
-                restartPlayer()
-                isPlaying.value=true
-                refreshTrigger.value=true
-                updatePlaybackState(true)
+
+                val result = audioManager.requestAudioFocus(audioFocusRequest)
+
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+
+                    player?.seekToDefaultPosition()
+                    player?.play()
+                    isPlaying.value = true
+                    refreshTrigger.value = true
+                    updatePlaybackState(true)
+                }
             }
 
             "ACTION_PAUSE" -> {
+
                 player?.pause()
-                isPlaying.value=false
-                refreshTrigger.value=false
+                audioManager.abandonAudioFocusRequest(audioFocusRequest)
+
+                isPlaying.value = false
+                refreshTrigger.value = false
                 updatePlaybackState(false)
             }
-
         }
-        CoroutineScope(Dispatchers.IO).launch {
 
+        CoroutineScope(Dispatchers.IO).launch {
 
             val title = intent?.getStringExtra("TITLE")
             val artist = intent?.getStringExtra("ARTIST")
@@ -265,39 +233,33 @@ class RadioService : Service() {
                 updateNotification(title, artist, artUrl)
             }
         }
+
         return START_STICKY
-
-
     }
 
     private fun updateNotification(title: String?, artist: String?, artUrl: String?) {
 
-       val bitmap = try {
+        val bitmap = try {
             artUrl?.let {
                 BitmapFactory.decodeStream(java.net.URL(it).openStream())
             }
-        }
-
-       catch (e: Exception) {
+        } catch (e: Exception) {
             null
         }
 
+        val openAppIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
 
-      val openAppIntent = Intent(this, MainActivity::class.java).apply {
-          flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-      }
-
-      val pendingIntent = PendingIntent.getActivity(
-          this,
-          0,
-          openAppIntent,
-          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-      )
-
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         fun updateMediaMetadata(title: String?, artist: String?, bitmap: Bitmap?) {
             val metadata = android.support.v4.media.MediaMetadataCompat.Builder()
-
                 .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, title)
                 .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                 .putBitmap(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
@@ -305,7 +267,6 @@ class RadioService : Service() {
 
             mediaSession.setMetadata(metadata)
         }
-
 
         val notification = NotificationCompat.Builder(this, "radio_channel")
             .setSmallIcon(R.drawable.ic_thaalam)
@@ -316,13 +277,10 @@ class RadioService : Service() {
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
             )
-
-
             .build()
 
         startForeground(1, notification)
         updateMediaMetadata(title, artist, bitmap)
-
     }
 
     private fun createNotificationChannel() {
@@ -337,7 +295,6 @@ class RadioService : Service() {
         }
     }
 
-
     override fun onDestroy() {
         audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
         metadataJob?.cancel()
@@ -346,24 +303,22 @@ class RadioService : Service() {
         super.onDestroy()
     }
 
-    override fun onBind(intent:Intent?): IBinder?{
+    override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
 
-        // Stop audio
         player?.stop()
         player?.release()
         player = null
+
         val intent = Intent("ACTION_STOP_APP")
         sendBroadcast(intent)
-        // Stop foreground & kill service
+
         stopForeground(true)
-        super.onTaskRemoved(rootIntent)
         stopSelf()
         android.os.Process.killProcess(android.os.Process.myPid())
     }
-
 }
