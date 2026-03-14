@@ -15,4 +15,4 @@ Thaalam 24x7 is a live online radio Android application built using native Andro
 - Android Native Framework
 
 ## APK
-The installable APK is available in the `/app` folder.
+The installable APK is available in the project folder.
