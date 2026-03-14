@@ -46,9 +46,9 @@ dependencies {
 
 
     implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
+    implementation("com.google.firebase:firebase-messaging:25.0.1")
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-messaging:24.0.0")
-        implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-ktx:1.12.0")
         implementation("androidx.activity:activity-compose:1.8.2")
         implementation(platform("androidx.compose:compose-bom:2024.02.00"))
         implementation("androidx.compose.ui:ui")
@@ -56,6 +56,7 @@ dependencies {
         implementation("androidx.compose.ui:ui-tooling-preview")
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.animation.core)
+    implementation(libs.firebase.messaging)
     debugImplementation("androidx.compose.ui:ui-tooling")
         implementation("androidx.compose.material:material-icons-extended")
         implementation("io.coil-kt:coil-compose:2.5.0")

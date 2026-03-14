@@ -41,9 +41,11 @@ import com.radio.thaalam.PlayerState.refreshTrigger
 import androidx.lifecycle.lifecycleScope
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import android.content.Context
+import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -116,6 +118,12 @@ class MainActivity : ComponentActivity() {
         connectivityManager.registerNetworkCallback(request, networkCallback)
     }
 
+    override fun onResume(){
+        super.onResume()
+        if(!isInternetAvailable(this)&& !isAppReady){
+            retryStartup()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -132,26 +140,8 @@ class MainActivity : ComponentActivity() {
             !isAppReady
 
         }
-        lifecycleScope.launch {
-            while (true) {
-                if (isInternetAvailable(this@MainActivity)) {
+        retryStartup()
 
-                    try {
-                        ApiClient.api.getNowPlaying()
-
-                        handlePlayback(this@MainActivity, false)
-                        isAppReady = true
-                        break
-
-                    } catch (e: Exception) {
-                        delay(2000)
-                    }
-                } else {
-                    handlePlayback(this@MainActivity, false)
-                    delay(2000)
-                }
-            }
-        }
 
         setContent {
             val context = LocalContext.current
@@ -198,12 +188,38 @@ class MainActivity : ComponentActivity() {
 
     }
 
+
     fun isInternetAvailable(context: Context): Boolean {
         val cm =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
         val network = cm.activeNetwork ?: return false
         val capabilities = cm.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun retryStartup(){
+
+        lifecycleScope.launch {
+            while (!isAppReady) {
+                if (isInternetAvailable(this@MainActivity)) {
+
+                    try {
+                        ApiClient.api.getNowPlaying()
+
+                        handlePlayback(this@MainActivity, false)
+                        isAppReady = true
+                        break
+
+                    } catch (e: Exception) {
+                        delay(2000)
+                    }
+                } else {
+                    handlePlayback(this@MainActivity, false)
+                    delay(2000)
+                }
+            }
+        }
+
     }
 
 
