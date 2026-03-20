@@ -1,6 +1,7 @@
 package com.radio.thaalam
 
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Intent
 import android.graphics.Bitmap
@@ -46,6 +47,7 @@ class RadioService : Service() {
         const val STREAM_URL = "https://radio.thaalam24x7.in/listen/thaalam_24x7/live"
     }
 
+    @SuppressLint("SuspiciousIndentation")
     fun restartPlayer(){
         try{
             player?.stop()
