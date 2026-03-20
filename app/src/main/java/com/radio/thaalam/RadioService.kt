@@ -158,7 +158,6 @@ class RadioService : Service() {
                     updatePlaybackState(true)
                 }
             }
-
             override fun onPause() {
 
                 player?.pause()
@@ -316,12 +315,7 @@ class RadioService : Service() {
         player?.stop()
         player?.release()
         player = null
-
-        val intent = Intent("ACTION_STOP_APP")
-        sendBroadcast(intent)
-
         stopForeground(true)
         stopSelf()
-        android.os.Process.killProcess(android.os.Process.myPid())
     }
 }
