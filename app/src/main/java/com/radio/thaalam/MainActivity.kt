@@ -63,24 +63,20 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import android.media.audiofx.AudioEffect
+import android.os.Handler
+import android.os.Looper
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import com.radio.thaalam.RadioPlayerHolder.player
 
 
 private var isAppReady = false
-
-
-
-
-
-
-
 
 
 class MainActivity : ComponentActivity() {
@@ -89,6 +85,13 @@ class MainActivity : ComponentActivity() {
     fun handlePlayback(context: Context, play: Boolean) {
         val intent = Intent(context, RadioService::class.java).apply {
             action = if (play) "ACTION_PAUSE" else "ACTION_PLAY"
+        }
+        context.startService(intent)
+    }
+
+    fun restartPlayback(context: Context) {
+        val intent = Intent(context, RadioService::class.java).apply {
+            action = "ACTION_RESTART"
         }
         context.startService(intent)
     }
@@ -103,11 +106,16 @@ class MainActivity : ComponentActivity() {
             override fun onAvailable(network: Network) {
                 // Internet is ON → play
                 handlePlayback(this@MainActivity, false)
+                restartPlayback(this@MainActivity)
             }
 
+            // Internet is OFF → pause by 5 seconds
             override fun onLost(network: Network) {
-                // Internet is OFF → pause
-                handlePlayback(this@MainActivity, true)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    handlePlayback(this@MainActivity, true)
+                }, 10000)
+
+
             }
         }
 
