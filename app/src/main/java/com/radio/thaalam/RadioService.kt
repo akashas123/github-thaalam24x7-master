@@ -31,6 +31,7 @@ import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
+import com.radio.thaalam.RadioService.StreamConfig.STREAM_URL
 
 
 class RadioService : Service() {
@@ -44,6 +45,25 @@ class RadioService : Service() {
     object StreamConfig {
         const val STREAM_URL = "https://radio.thaalam24x7.in/listen/thaalam_24x7/live"
     }
+
+    fun restartPlayer(){
+        try{
+            player?.stop()
+            player?.clearMediaItems()
+
+            val mediaItem = MediaItem.fromUri(STREAM_URL)
+                            player?.setMediaItem(mediaItem)
+            player?.prepare()
+            player?.playWhenReady=true
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
+    }
+
+    companion object{
+        const val ACTION_RESTART = "ACTION_RESTART"
+    }
+
 
     private val focusChangeListener =
         AudioManager.OnAudioFocusChangeListener { focusChange ->
@@ -223,6 +243,10 @@ class RadioService : Service() {
                 refreshTrigger.value = false
                 updatePlaybackState(false)
             }
+
+            "ACTION_RESTART" -> {
+            restartPlayer()
+            }
         }
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -315,7 +339,12 @@ class RadioService : Service() {
         player?.stop()
         player?.release()
         player = null
+
+        val intent = Intent("ACTION_STOP_APP")
+        sendBroadcast(intent)
+
         stopForeground(true)
         stopSelf()
+        android.os.Process.killProcess(android.os.Process.myPid())
     }
 }
