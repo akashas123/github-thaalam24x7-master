@@ -12,6 +12,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
@@ -31,7 +32,9 @@ import androidx.annotation.RequiresApi
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.radio.thaalam.RadioService.StreamConfig.STREAM_URL
 
 
@@ -133,9 +136,13 @@ class RadioService : Service() {
             .build()
 
         if (player != null) return
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent("Thaalam 24x7")
+        val mediaSourceFactory= DefaultMediaSourceFactory(httpDataSourceFactory)
         val loadcontrol = DefaultLoadControl.Builder()
             .setBufferDurationsMs(30000,120000,3000,5000).build()
         player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(mediaSourceFactory)
             .setLoadControl(loadcontrol)
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -207,7 +214,9 @@ class RadioService : Service() {
                 PlaybackStateCompat.ACTION_PLAY or
                         PlaybackStateCompat.ACTION_PAUSE
             )
-            .setState(state, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f)
+            .setState(state,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                if(isPlaying) 1f else 0f)
             .build()
 
         mediaSession.setPlaybackState(playbackState)
@@ -287,10 +296,11 @@ class RadioService : Service() {
         )
 
         fun updateMediaMetadata(title: String?, artist: String?, bitmap: Bitmap?) {
-            val metadata = android.support.v4.media.MediaMetadataCompat.Builder()
-                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, title)
-                .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-                .putBitmap(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+            val metadata = MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1L)
                 .build()
 
             mediaSession.setMetadata(metadata)
